@@ -8,6 +8,10 @@
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
 //  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
 
+import ScreenMgr from './ScreenMgr'
+import {ScreenStatus} from "./Enums"
+import Game from './Game'
+
 const {ccclass, property} = cc._decorator;
 
 @ccclass
@@ -25,6 +29,7 @@ export default class ResultScreen extends cc.Component {
 
     // update (dt) {}
     playAgainButtonClicked(event: any, data: any) {
-        cc.director.loadScene("action_phase");
+        ScreenMgr.getInstance().changeScreen(ScreenStatus.action_phase);
+        Game.getInstance().getGamePlay().reset();
     }
 }

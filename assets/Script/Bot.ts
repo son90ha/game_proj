@@ -8,7 +8,7 @@
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
 //  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import Game from './Game'
+import GamePlay from './GamePlay'
 
 const {ccclass, property} = cc._decorator;
 
@@ -17,7 +17,7 @@ export default class Bot extends cc.Component {
 
     @property
     speed: number = 0;
-    game: Game = null;
+    game: GamePlay = null;
     isChaseEgg: boolean = false;
     // LIFE-CYCLE CALLBACKS:
 
