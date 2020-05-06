@@ -15,9 +15,6 @@ const {ccclass, property} = cc._decorator;
 @ccclass
 export default class McController extends cc.Component {
 
-    @property(cc.Label)
-    label: cc.Label = null;
-
     @property
     speed: number = 1;
     game: Game = null;
@@ -47,15 +44,23 @@ export default class McController extends cc.Component {
 
     update (dt: number) {
         if(this.moveUp) {
-            this.node.y += this.speed * dt;
+            if(this.node.y <= this.game.boxEdgeSize.y / 2) {
+                this.node.y += this.speed * dt;
+            }
         } else if(this.moveDown) {
-            this.node.y -= this.speed * dt;
+            if(this.node.y >= -this.game.boxEdgeSize.y / 2) {
+                this.node.y -= this.speed * dt;
+            }
         }
 
         if (this.moveLeft) {
-            this.node.x -= this.speed * dt;
+            if(this.node.x >= -this.game.boxEdgeSize.x / 2) {
+                this.node.x -= this.speed * dt;
+            }
         } else if (this.moveRight) {
-            this.node.x += this.speed * dt;
+            if(this.node.x <= this.game.boxEdgeSize.x / 2) {
+                this.node.x += this.speed * dt;
+            }
         }
 
     }

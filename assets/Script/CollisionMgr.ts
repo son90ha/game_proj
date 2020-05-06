@@ -20,6 +20,10 @@ export default class CollsionMgr extends cc.Component {
             mc.canPickEgg = true;
             mc.egg = other;
         }
+
+        if(other.node.group == "egg" && self.node.group == "bot") {
+            self.node.getComponent("Bot").pickEggUp(other);
+        }
     }
 
     onCollisionExit(other: any, self: any) {
@@ -32,8 +36,8 @@ export default class CollsionMgr extends cc.Component {
 
     onLoad () {
         cc.director.getCollisionManager().enabled = true;
-        cc.director.getCollisionManager().enabledDebugDraw = true;
-        cc.director.getCollisionManager().enabledDrawBoundingBox = true;
+        // cc.director.getCollisionManager().enabledDebugDraw = true;
+        // cc.director.getCollisionManager().enabledDrawBoundingBox = true;
     }
 
     start () {
