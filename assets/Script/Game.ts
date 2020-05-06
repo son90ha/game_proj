@@ -30,23 +30,25 @@ export default class Game extends cc.Component {
 
     @property
     timeLimit: number = 0;
-
     boxEdgeSize: cc.Vec2 = cc.v2();
-    score: number = 0;
     timeElapsed: number = 0;
+    playerScoresArr: number[] = [];
+    mainChar: cc.Node = null;
     // LIFE-CYCLE CALLBACKS:
 
 
     onLoad () {
+        this.playerScoresArr[0] = 0;
+        this.playerScoresArr[1] = 0;
         this.timeElapsed = this.timeLimit;
         this.boxEdgeSize = cc.v2(this.node.getChildByName("boxEdge").width, this.node.getChildByName("boxEdge").height);
         this.updateTime(this.timeLimit);
         this.updateScore();
-        this.spawnNewEgg();
         this.spawnMC();
+        this.spawnNewEgg();
         this.spawnBot();
 
-        this.node.on(cc.Node.EventType.TOUCH_START, this.onTouchStart, this);
+        cc.director.preloadScene("result_screen");
     }
 
     start () {
@@ -58,19 +60,31 @@ export default class Game extends cc.Component {
             this.timeElapsed -= dt;
             if(this.timeElapsed <= 0) {
                 this.timeElapsed = 0;
+                let tempScoreArr: number[] = this.playerScoresArr.slice();
+                cc.director.loadScene("result_screen", () => {
+                    let resultNode: cc.Node = cc.director.getScene().getChildByName("Canvas");
+                    let resultScreen = resultNode.getComponent("ResultScreen");
+                    if(tempScoreArr[0] > tempScoreArr[1]) {
+                        resultScreen.label.string = "WIN";
+                    } else if (tempScoreArr[0] < tempScoreArr[1]) {
+                        resultScreen.label.string = "LOSS";
+                    } else if (tempScoreArr[0] === tempScoreArr[1]) {
+                        resultScreen.label.string = "DRAW";
+                    }
+                });
             }
             this.updateTime(this.timeElapsed);
         }
     }
 
     onDestroy(): void {
-        this.node.off(cc.Node.EventType.TOUCH_START, this.onTouchStart, this);
     }
 
     spawnNewEgg(): void {
         let newEgg: cc.Node = cc.instantiate(this.eggPrefab);
         this.node.addChild(newEgg);
         newEgg.setPosition(this.createNewEggPos());
+        newEgg.getComponent("Touch").mainChar = this.mainChar;
     }
 
     createNewEggPos(): cc.Vec2 {
@@ -80,10 +94,10 @@ export default class Game extends cc.Component {
     }
 
     spawnMC(): void {
-        let newMC: cc.Node = cc.instantiate(this.mcPrefab);
-        this.node.addChild(newMC);
-        newMC.setPosition(cc.v2(0,0));
-        newMC.getComponent("MCController").game = this;
+        this.mainChar = cc.instantiate(this.mcPrefab);
+        this.node.addChild(this.mainChar);
+        this.mainChar.setPosition(cc.v2(0,0));
+        this.mainChar.getComponent("MCController").game = this;
     }
 
     spawnBot(): void {
@@ -94,16 +108,14 @@ export default class Game extends cc.Component {
     }
 
     updateScore(): void {
-        let scoreTxt: cc.Label = this.node.getChildByName("scoreBar").getChildByName("score_txt").getComponent(cc.Label);
-        scoreTxt.string = `${this.score}`;
+        let scoreTxt1: cc.Label = this.node.getChildByName("scoreBar").getChildByName("score_txt_1").getComponent(cc.Label);
+        scoreTxt1.string = `You: ${this.playerScoresArr[0]}`;
+        let scoreTxt2: cc.Label = this.node.getChildByName("scoreBar").getChildByName("score_txt_2").getComponent(cc.Label);
+        scoreTxt2.string = `Bot: ${this.playerScoresArr[1]}`;
     }
 
     updateTime(time: number): void {
         let timeRemaining: cc.Label = this.node.getChildByName("timeRemaining").getComponent(cc.Label);
         timeRemaining.string = `${Math.ceil(time)}`;
-    }
-
-    onTouchStart(event: cc.Event.EventTouch): void {
-        console.log(event.getLocation());
     }
 }

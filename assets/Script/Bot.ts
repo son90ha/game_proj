@@ -41,7 +41,7 @@ export default class Bot extends cc.Component {
 
     pickEggUp(egg: any): void {
         if(egg) {
-            this.game.score++;
+            this.game.playerScoresArr[1]++;
             this.game.updateScore();
             egg.node.destroy();
             this.game.spawnNewEgg();

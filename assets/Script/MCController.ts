@@ -87,10 +87,6 @@ export default class McController extends cc.Component {
                 this.moveLeft = false;
                 break;
             }
-            case cc.macro.KEY.space: {
-                this.pickEggUp();
-                break;
-            }
         }
     }
 
@@ -118,6 +114,8 @@ export default class McController extends cc.Component {
     pickEggUp(): void {
         if(this.canPickEgg) {
             if(this.egg) {
+                this.game.playerScoresArr[0]++;
+                this.game.updateScore();
                 this.egg.node.destroy();
                 this.game.spawnNewEgg();
             }

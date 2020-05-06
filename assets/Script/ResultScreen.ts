@@ -11,29 +11,20 @@
 const {ccclass, property} = cc._decorator;
 
 @ccclass
-export default class NewClass extends cc.Component {
-    
-    mainChar: cc.Node = null;
+export default class ResultScreen extends cc.Component {
 
+    @property(cc.Label)
+    label: cc.Label = null;
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
-        this.node.on(cc.Node.EventType.TOUCH_START, this.onTouchStart, this);
     }
 
     start () {
-
     }
 
     // update (dt) {}
-
-    onDestroy(): void {
-        this.node.off(cc.Node.EventType.TOUCH_START, this.onTouchStart, this);
-    }
-
-    onTouchStart(event: cc.Event.EventTouch): void {
-        if(this.mainChar) {
-            this.mainChar.getComponent("MCController").pickEggUp();
-        }
+    playAgainButtonClicked(event: any, data: any) {
+        cc.director.loadScene("action_phase");
     }
 }
