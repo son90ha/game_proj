@@ -177,7 +177,7 @@
       "array": [
         0,
         0,
-        496.23255636848336,
+        496.4490627194295,
         0,
         0,
         0,
@@ -1066,7 +1066,7 @@
     "botPrefab": {
       "__uuid__": "2f1afc5d-fb8c-4f7b-8b69-ecf0ae86bc95"
     },
-    "timeLimit": 10,
+    "timeLimit": 50,
     "_id": "177xcqbONIbpxBVDsm37or"
   },
   {
@@ -1081,7 +1081,7 @@
         "__id__": 25
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 38

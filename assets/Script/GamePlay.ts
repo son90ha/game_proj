@@ -10,6 +10,7 @@
 
 import ScreenMgr from './ScreenMgr'
 import {ScreenStatus} from './Enums'
+import Game from './Game';
 
 const {ccclass, property} = cc._decorator;
 
@@ -38,6 +39,11 @@ export default class GamePlay extends cc.Component {
     playerScoresArr: number[] = [];
     mainChar: cc.Node = null;
     bot: cc.Node = null;
+    timeToUpdate: number = 0.02;
+    timeUpdateElapsed: number = 0.02;
+    mcServerPos: cc.Vec2 = cc.v2(0, 0);
+    ratioDelayServerTime: number = 1;
+    distanceCharMove: cc.Vec2 = cc.v2(0, 0);
     // LIFE-CYCLE CALLBACKS:
 
 
@@ -74,6 +80,12 @@ export default class GamePlay extends cc.Component {
 						}
             this.updateTime(this.timeElapsed);
         }
+
+        if(this.timeUpdateElapsed <= 0) {
+            this.updateMC(this.timeToUpdate);
+            this.timeUpdateElapsed = this.timeToUpdate;
+        }
+        this.timeUpdateElapsed -= dt;
     }
 
     onDestroy(): void {
@@ -96,7 +108,7 @@ export default class GamePlay extends cc.Component {
         this.mainChar = cc.instantiate(this.mcPrefab);
         this.node.addChild(this.mainChar);
         this.mainChar.setPosition(cc.v2(0,0));
-        this.mainChar.getComponent("MCController").game = this;
+        this.mainChar.getComponent("MCController").gamePlay = this;
     }
 
     spawnBot(): void {
@@ -116,6 +128,53 @@ export default class GamePlay extends cc.Component {
     updateTime(time: number): void {
         let timeRemaining: cc.Label = this.node.getChildByName("timeRemaining").getComponent(cc.Label);
         timeRemaining.string = `${Math.ceil(time)}`;
+    }
+
+    updateMC(dt: number): void {
+        // if(this.mainChar.x !== this.mcServerPos.x && this.mainChar.y !== this.mcServerPos.y) {
+        // if(Math.round(this.mainChar.x) != this.mcServerPos.x || Math.round(this.mainChar.y) != this.mcServerPos.y) {
+            // let mcController = this.mainChar.getComponent("MCController");
+            // if(mcController.moveUp) {
+            //     if(mcController.node.y <= this.boxEdgeSize.y / 2) {
+            //         mcController.node.y += mcController.speed * dt;
+            //     }
+            // } else if(mcController.moveDown) {
+            //     if(mcController.node.y >= -this.boxEdgeSize.y / 2) {
+            //         mcController.node.y -= mcController.speed * dt;
+            //     }
+            // }
+    
+            // if (mcController.moveLeft) {
+            //     if(mcController.node.x >= -this.boxEdgeSize.x / 2) {
+            //         mcController.node.x -= mcController.speed * dt;
+            //     }
+            // } else if (mcController.moveRight) {
+            //     if(mcController.node.x <= this.boxEdgeSize.x / 2) {
+            //         mcController.node.x += mcController.speed * dt;
+            //     }
+            // }
+        // }
+        // console.log(`mainchar Pos: ${Math.round(this.mainChar.x)}, ${Math.round(this.mainChar.y)}`);
+        // console.log(`serverPos: ${this.mcServerPos.x}, ${this.mcServerPos.y}`);
+        // if(Math.round(this.mainChar.x) != this.mcServerPos.x || Math.round(this.mainChar.y) != this.mcServerPos.y) {
+        //     console.log("move");
+        //     this.mainChar.x += this.distanceCharMove.x;
+        //     this.mainChar.y += this.distanceCharMove.y;
+        // }
+    }
+
+    serverAlreadyUpdated() {
+        // let jsonServerData: any = JSON.parse(Game.getInstance().getServerSim().serverData);
+        // let mcData = jsonServerData.charInfo[0];
+        // this.mainChar.x = this.mcServerPos.x;
+        // this.mainChar.y = this.mcServerPos.y;
+        // this.mcServerPos.x = mcData.x;
+        // this.mcServerPos.y = mcData.y;
+        // // this.ratioDelayServerTime = Game.getInstance().getTimeServerUpdate() / this.timeToUpdate;
+        // this.ratioDelayServerTime = 10;
+        // //console.log(this.ratioDelayServerTime);
+        // this.distanceCharMove.x = (this.mcServerPos.x - this.mainChar.x) / this.ratioDelayServerTime;
+        // this.distanceCharMove.y = (this.mcServerPos.y - this.mainChar.y) / this.ratioDelayServerTime;
     }
 
     reset(): void {
