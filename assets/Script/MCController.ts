@@ -27,6 +27,8 @@ export default class McController extends cc.Component {
     moveRight: boolean = false;
     moveUp: boolean = false;
     moveDown: boolean = false;
+    isPickingEgg: boolean = false;
+    pickEggId = undefined;;
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
@@ -75,7 +77,8 @@ export default class McController extends cc.Component {
                 this.node.x += this.speed * dt;
             }
         }
-        let mcObj = Game.getInstance().createCharObj("mc", this.node.x, this.node.y, false, this.gamePlay.playerScoresArr[0]);
+        // console.log(`[MCController] - update - this.isPickingEgg = ${this.isPickingEgg}`);
+        let mcObj = Game.getInstance().createCharObj("mc", this.node.x, this.node.y, this.isPickingEgg, this.gamePlay.playerScoresArr[0], this.pickEggId);
         Game.getInstance().postToServer(JSON.stringify(mcObj));
     }
 
@@ -125,7 +128,10 @@ export default class McController extends cc.Component {
         }
     }
 
-    pickEggUp(): void {
+    pickEggUp(id: number): void {
+        this.isPickingEgg = true;
+        this.pickEggId = id;
+        // console.log("[MCController] - `pickEggUp` " + id);
         // if(this.canPickEgg) {
         //     if(this.egg) {
         //         this.game.playerScoresArr[0]++;

@@ -19,6 +19,7 @@ export default class ServerSim extends cc.Component {
 
     serverData: string = "{}";
     requests: string[] = [];
+    eggIndex: number = 0;
     private static instance_: ServerSim = null;
     // LIFE-CYCLE CALLBACKS:
 
@@ -46,26 +47,46 @@ export default class ServerSim extends cc.Component {
     initData() {
         let jsonData = JSON.parse(ServerSim.getInstance().serverData);
         jsonData["charInfo"] = [
-            {"id": "mc", "x": 0, "y": 0, "pick": false, "score": 0}
+            {"id": "mc", "x": 0, "y": 0, "pick": false, "score": 0, "eggId": undefined}
         ];
+        let randomeEggPos = Game.getInstance().getGamePlay().createNewEggPos()
+        // console.log("randomeEggPos:" + randomeEggPos);
+        jsonData["eggs"] = [{"id": ServerSim.getInstance().eggIndex,"x": randomeEggPos.x, "y": randomeEggPos.y}];
+        // console.log(JSON.stringify(jsonData));
         ServerSim.getInstance().serverData = JSON.stringify(jsonData);
     }
 
     updateServerData(jsonData: any, dt: number): void {
         let jsonServerData: any = JSON.parse(ServerSim.getInstance().serverData);
         let charInfo: any = jsonServerData["charInfo"];
-        let mc = charInfo[0];
-        // mc.x = mc.x + ServerSim.getInstance().mcSpeed * 0.02 * jsonData.x;
-        // mc.x = (mc.x <= -Game.getInstance().getGamePlay().boxEdgeSize.x / 2) ? -Game.getInstance().getGamePlay().boxEdgeSize.x / 2 : mc.x;
-        // mc.x = (mc.x >= Game.getInstance().getGamePlay().boxEdgeSize.x / 2 ) ? Game.getInstance().getGamePlay().boxEdgeSize.x / 2 : mc.x;
-        // mc.y = mc.y + ServerSim.getInstance().mcSpeed * 0.02 * jsonData.y;
-        // mc.y = (mc.y <= -Game.getInstance().getGamePlay().boxEdgeSize.y / 2) ? -Game.getInstance().getGamePlay().boxEdgeSize.y / 2 : mc.y;
-        // mc.y = (mc.y >= Game.getInstance().getGamePlay().boxEdgeSize.y / 2 ) ? Game.getInstance().getGamePlay().boxEdgeSize.y / 2 : mc.y;
-        mc.x = Math.round(jsonData.x);
-        mc.y = Math.round(jsonData.y);
-
-        console.log(`serverData: mc.x = ${mc.x}, mc.y = ${mc.y}, dt = ${dt}`);
-
+        let eggsInfo: any = jsonServerData["eggs"];
+        for(let char of charInfo) {
+            if(char.id == "mc") {
+                char.x = Math.round(jsonData.x);
+                char.y = Math.round(jsonData.y);
+                char.pick = jsonData.pick;
+                char.eggId = jsonData.eggId;
+                if(char.pick == true) {
+                    eggsInfo = eggsInfo.filter((egg: any) => {
+                        return egg.id != char.eggId;
+                    });
+                    ServerSim.getInstance().spawnNewEgg(eggsInfo);
+                    char.pick = false;
+                }
+            }
+        }
+        jsonServerData["eggs"] = eggsInfo;
+        // console.log("`updateServerData` - " + JSON.stringify(jsonServerData));
         ServerSim.getInstance().serverData = JSON.stringify(jsonServerData);
+    }
+
+    spawnNewEgg(eggsInfo: any): void {
+        console.log("[ServerSim] `spawnNewEgg`");
+        let randomeEggPos = Game.getInstance().getGamePlay().createNewEggPos()
+        // let jsonData = JSON.parse(ServerSim.getInstance().serverData);
+        ServerSim.getInstance().eggIndex = ServerSim.getInstance().eggIndex + 1;
+        eggsInfo.push({"id": ServerSim.getInstance().eggIndex, "x": randomeEggPos.x, "y": randomeEggPos.y});
+        // console.log(JSON.stringify(jsonData));
+        // ServerSim.getInstance().serverData = JSON.stringify(jsonData);
     }
 }

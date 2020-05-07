@@ -12,6 +12,11 @@ import ScreenMgr from './ScreenMgr'
 import {ScreenStatus} from './Enums'
 import Game from './Game';
 
+interface Egg {
+    id: number;
+    node: cc.Node;
+}
+
 const {ccclass, property} = cc._decorator;
 
 @ccclass
@@ -44,6 +49,7 @@ export default class GamePlay extends cc.Component {
     mcServerPos: cc.Vec2 = cc.v2(0, 0);
     ratioDelayServerTime: number = 1;
     distanceCharMove: cc.Vec2 = cc.v2(0, 0);
+    eggs: Egg[] = [];
     // LIFE-CYCLE CALLBACKS:
 
 
@@ -52,11 +58,12 @@ export default class GamePlay extends cc.Component {
         this.playerScoresArr[1] = 0;
         this.timeElapsed = this.timeLimit;
         this.boxEdgeSize = cc.v2(this.node.getChildByName("boxEdge").width, this.node.getChildByName("boxEdge").height);
+        Game.getInstance().getServerSim().initData();
         this.updateTime(this.timeLimit);
         this.updateScore();
         this.spawnMC();
-        this.spawnNewEgg();
-        this.spawnBot();
+        // this.spawnNewEgg();
+        // this.spawnBot();
     }
 
     start () {
@@ -101,6 +108,7 @@ export default class GamePlay extends cc.Component {
     createNewEggPos(): cc.Vec2 {
         let randX: number = Math.random() * this.boxEdgeSize.x - this.boxEdgeSize.x / 2;
         let randY: number = Math.random() * this.boxEdgeSize.y - this.boxEdgeSize.y / 2;
+        // console.log(`boxEdgeSize: ${this.boxEdgeSize}`);
         return cc.v2(randX, randY);
     }
 
@@ -163,7 +171,39 @@ export default class GamePlay extends cc.Component {
         // }
     }
 
+    updateEggs(dt: number): void {
+        let data = Game.getInstance().getServerData();
+        let jsonData = JSON.parse(data);
+        let eggsData = jsonData["eggs"];
+        // console.log("eggdata: " + JSON.stringify(eggsData));
+        for(let eggData of eggsData) {
+            if(!this.eggs.some(egg => {
+                return egg.id == eggData.id;
+            })){
+                let newEgg: cc.Node = cc.instantiate(this.eggPrefab);
+                newEgg.getComponent("Touch").mainChar = this.mainChar;
+                newEgg.getComponent("Touch").id = eggData.id;
+                let egg: Egg = {"id": 0, "node": newEgg};
+                egg.id = eggData.id;
+                this.node.addChild(egg.node);
+                egg.node.x = eggData.x;
+                egg.node.y = eggData.y;
+                this.eggs.push(egg);
+            }
+        }
+
+        for(let egg of this.eggs) {
+            if(!eggsData.some((e => e.id == egg.id))) {
+                egg.node.destroy();
+                egg.node = null;
+            }
+        }
+
+        this.eggs = this.eggs.filter((e) => e.node != null);
+    }
+
     serverAlreadyUpdated() {
+        this.updateEggs(0);
         // let jsonServerData: any = JSON.parse(Game.getInstance().getServerSim().serverData);
         // let mcData = jsonServerData.charInfo[0];
         // this.mainChar.x = this.mcServerPos.x;

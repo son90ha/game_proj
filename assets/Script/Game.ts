@@ -28,7 +28,6 @@ export default class Game extends cc.Component {
     onLoad () {
         Game.getInstance().gamePlay = this.node.getChildByName("action_phase").getComponent("GamePlay");
         Game.getInstance().serverSim = ServerSim.getInstance();
-        Game.getInstance().serverSim.initData();
         Game.getInstance().renewTimeServerUpdate();
     }
 
@@ -42,6 +41,7 @@ export default class Game extends cc.Component {
             Game.getInstance().getServerSim().update(Game.getInstance().timeServerUpdate);
             Game.getInstance().renewTimeServerUpdate();
             Game.getInstance().getGamePlay().serverAlreadyUpdated();
+            // console.log(Game.getInstance().getServerData());
         }
     }
 
@@ -75,11 +75,11 @@ export default class Game extends cc.Component {
     }
 
     getServerData(): string {
-        return Game.getInstance().serverSim.serverData;
+        return ServerSim.getInstance().serverData;
     }
 
-    createCharObj(id: string, x: number, y: number, pick: boolean, score:number): object {
-        return {"id": id, "x": x, "y": y, "pick": pick, "score": score};
+    createCharObj(id: string, x: number, y: number, pick: boolean, score:number, eggId?: number): object {
+        return {"id": id, "x": x, "y": y, "pick": pick, "score": score, "eggId": eggId};
     }
 
     renewTimeServerUpdate(): void {
