@@ -139,8 +139,10 @@
       "__id__": 1
     },
     "_enabled": true,
-    "label": null,
     "speed": 300,
+    "trailParticle": {
+      "__uuid__": "6c32a008-b1a3-4794-8120-b87e2527d12c"
+    },
     "_id": ""
   },
   {

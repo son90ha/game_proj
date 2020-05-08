@@ -10,14 +10,15 @@
 
 import GamePlay from './GamePlay'
 import ServerSim from './ServerSim'
-import {SendType} from './Enums'
+import ScreenMgr from './ScreenMgr'
+import {ScreenStatus} from "./Enums"
 
 const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class Game extends cc.Component {
     
-    botCount: number = 5;
+    botCount: number = 2;
     eggCount: number = 10;
     private gamePlay: GamePlay = null;
     private serverSim: ServerSim = null;
@@ -38,6 +39,10 @@ export default class Game extends cc.Component {
     }
 
     update (dt: number) {
+        if(ScreenMgr.getInstance().curScreen != ScreenStatus.action_phase) {
+            return;
+        }
+
         Game.getInstance().timeServerElapse -= dt;
         if(Game.getInstance().timeServerElapse <= 0) {
             Game.getInstance().getServerSim().update(Game.getInstance().timeServerUpdate);
@@ -92,5 +97,9 @@ export default class Game extends cc.Component {
 
     getTimeServerUpdate(): number {
         return Game.getInstance().timeServerUpdate;
+    }
+
+    getScreenMgr(): ScreenMgr {
+        return ScreenMgr.getInstance();
     }
 }

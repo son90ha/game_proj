@@ -32,7 +32,9 @@ export default class Touch extends cc.Component {
         // console.log("[Touch] onDestroy");
         this.node.off(cc.Node.EventType.TOUCH_START, this.onTouchStart, this);
         this.node.off(cc.Node.EventType.TOUCH_END, this.onTouchEnd, this);
-        this.mainChar.getComponent("MCController").isPickingEgg = false;
+        if(this.mainChar) {
+            this.mainChar.getComponent("MCController").isPickingEgg = false;
+        }
     }
 
     onTouchStart(event: cc.Event.EventTouch): void {

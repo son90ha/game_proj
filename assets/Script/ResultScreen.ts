@@ -32,4 +32,9 @@ export default class ResultScreen extends cc.Component {
         ScreenMgr.getInstance().changeScreen(ScreenStatus.action_phase);
         Game.getInstance().getGamePlay().reset();
     }
+
+    // exitButtonClicked(event: any, data: any) {
+    //     ScreenMgr.getInstance().changeScreen(ScreenStatus.start_screen);
+    //     Game.getInstance().getGamePlay().reset();
+    // }
 }

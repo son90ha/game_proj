@@ -18,6 +18,12 @@ export default class McController extends cc.Component {
 
     @property
     speed: number = 1;
+
+    @property({
+        type: cc.Prefab
+    })
+    trailParticle : cc.Prefab = null;
+
     gamePlay: GamePlay = null;
     eggsCanPick: number[] = [];
     egg: cc.Component = null;
@@ -46,6 +52,9 @@ export default class McController extends cc.Component {
     }
 
     update (dt: number) {
+        if(!Game.getInstance().getScreenMgr().isActionPhase()) {
+            return;
+        }
         // let x: number = 0, y:number = 0;
         // if(this.moveDown) {
         //     y = -1;
@@ -59,6 +68,7 @@ export default class McController extends cc.Component {
         //     x = 1;
         // }
         // console.log("[MCController] - update - canPickEgg = " + this.eggsCanPick);
+        this.updateEggCanPickEffect(dt);
         if(this.moveUp) {
             if(this.node.y <= this.gamePlay.boxEdgeSize.y / 2) {
                 this.node.y += this.speed * dt;
@@ -79,6 +89,12 @@ export default class McController extends cc.Component {
             }
         }
         // console.log(`[MCController] - update - this.isPickingEgg = ${this.isPickingEgg}`);
+
+        // Add particles
+        let newParticles = cc.instantiate(this.trailParticle);
+        newParticles.setPosition(this.node.getPosition());
+        Game.getInstance().getGamePlay().node.getChildByName("background").addChild(newParticles);
+
         let mcObj = Game.getInstance().createCharObj("mc", this.node.x, this.node.y, this.isPickingEgg, this.gamePlay.mcScore, this.pickEggId);
         Game.getInstance().postToServer(JSON.stringify(mcObj));
     }
@@ -166,7 +182,33 @@ export default class McController extends cc.Component {
                     return egg == e.id;
                 })) {
                     this.eggsCanPick.splice(this.eggsCanPick.indexOf(e.id), 1);
+                    e.node.opacity = 255;
+                    e.node.setScale(cc.v2(0.2,0.2));
                     break;
+                }
+            }
+        }
+    }
+
+    updateEggCanPickEffect(dt: number){
+        for(let id of this.eggsCanPick) {
+            for(let egg of this.gamePlay.eggs) {
+                if(id == egg.id) {
+                    egg.node.opacity -= 1500 * dt;
+                    if(egg.node.opacity <= 0) {
+                        egg.node.opacity = 255;
+                    }
+                    
+                    let curScale: cc.Vec2 = cc.v2(0, 0);
+                    egg.node.getScale(curScale);
+                    curScale.x = curScale.x + 0.5 * dt;
+                    curScale.y = curScale.x + 0.5 * dt;
+                    if(curScale.x >= 0.3 ) {
+                        curScale.x = 0.2;
+                        curScale.y = 0.2;
+                    }
+                    // console.log("curScale = " + curScale);
+                    egg.node.setScale(curScale);
                 }
             }
         }

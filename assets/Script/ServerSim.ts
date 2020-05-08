@@ -77,7 +77,7 @@ export default class ServerSim extends cc.Component {
                     char.pick = jsonData.pick;
                     char.eggId = jsonData.eggId;
                     if(char.pick == true) { 
-                        console.log("pick");
+                        // console.log("pick");
                         if(eggsInfo.some((egg: any) => {
                             return egg.id == char.eggId;
                         })) {

@@ -64,11 +64,28 @@ export default class GamePlay extends cc.Component {
     // distanceCharMove: cc.Vec2 = cc.v2(0, 0);
     eggs: Egg[] = [];
     predictDirectPos: cc.Vec2[] = [];
+    spriteFrameList: cc.SpriteFrame[] = [];
     // predictDirectPos: cc.Vec2 = cc.v2(0, 0);
     // LIFE-CYCLE CALLBACKS:
 
 
     onLoad () {
+
+        // console.log("[GamePlay] - onLoad");
+        let spriteFrameList = this.spriteFrameList;
+        cc.loader.loadRes("./egg1", cc.SpriteFrame, function(err, spriteFrame) {
+            spriteFrameList.push(spriteFrame);
+        })
+        cc.loader.loadRes("./egg2", cc.SpriteFrame, function(err, spriteFrame) {
+            spriteFrameList.push(spriteFrame);
+        })
+        cc.loader.loadRes("./egg3", cc.SpriteFrame, function(err, spriteFrame) {
+            spriteFrameList.push(spriteFrame);
+        })
+        cc.loader.loadRes("./egg4", cc.SpriteFrame, function(err, spriteFrame) {
+            spriteFrameList.push(spriteFrame);
+        })
+
         this.timeElapsed = this.timeLimit;
         this.boxEdgeSize = cc.v2(this.node.getChildByName("boxEdge").width, this.node.getChildByName("boxEdge").height);
         Game.getInstance().getServerSim().initData();
@@ -85,6 +102,10 @@ export default class GamePlay extends cc.Component {
     }
 
     update (dt: number) {
+        if(ScreenMgr.getInstance().curScreen != ScreenStatus.action_phase) {
+            return;
+        }
+
         if(this.timeElapsed > 0) {
             this.timeElapsed -= dt;
             if (this.timeElapsed <= 0) {
@@ -119,12 +140,12 @@ export default class GamePlay extends cc.Component {
     onDestroy(): void {
     }
 
-    spawnNewEgg(): void {
-        let newEgg: cc.Node = cc.instantiate(this.eggPrefab);
-        this.node.addChild(newEgg);
-        newEgg.setPosition(this.createNewEggPos());
-        newEgg.getComponent("Touch").mainChar = this.mainChar;
-    }
+    // spawnNewEgg(): void {
+    //     let newEgg: cc.Node = cc.instantiate(this.eggPrefab);
+    //     this.node.addChild(newEgg);
+    //     newEgg.setPosition(this.createNewEggPos());
+    //     newEgg.getComponent("Touch").mainChar = this.mainChar;
+    // }
 
     createNewEggPos(): cc.Vec2 {
         let randX: number = Math.random() * this.boxEdgeSize.x - this.boxEdgeSize.x / 2;
@@ -151,6 +172,8 @@ export default class GamePlay extends cc.Component {
     spawnBot(): void {
         let serverData: string = Game.getInstance().getServerData();
         let jsonData: any = JSON.parse(serverData);
+        let isShowReal = this.node.getComponentInChildren(cc.Toggle).isChecked;
+        let opacity: number = isShowReal ? 100 : 0;
         for(let e of jsonData.charInfo) {
             if(e.id == "bot") {
                 this.bots[e.botID] = cc.instantiate(this.botPrefab);
@@ -158,7 +181,7 @@ export default class GamePlay extends cc.Component {
                 this.bots[e.botID].setPosition(cc.v2(e.x,e.y));
                 this.bots[e.botID].getComponent("Bot").gamePlay = this;
                 this.bots[e.botID].getComponent("Bot").botID = e.botID;
-                this.bots[e.botID].opacity = 100;
+                this.bots[e.botID].opacity = opacity;
                 this.botScoresArr[e.botID] = e.score;
 
                 let scoreTxt: cc.Node = cc.instantiate(this.scoreTxt);
@@ -176,10 +199,15 @@ export default class GamePlay extends cc.Component {
 
     updateScore(): void {
         //let scoreTxt1: cc.Label = this.node.getChildByName("scoreBar").getChildByName("score_txt_1").getComponent(cc.Label);
-        this.node.getChildByName("scoreBar").getChildByName("mc_score").getComponent(cc.Label).string = `You: ${this.mcScore}`;
+        // console.log("[GamePlay] - UpdateScore");
+        if(this.node.getChildByName("scoreBar").getChildByName("mc_score")) {
+            this.node.getChildByName("scoreBar").getChildByName("mc_score").getComponent(cc.Label).string = `You: ${this.mcScore}`;
+        }
         for(let botScore of this.botScoresArr) {
             let index = this.botScoresArr.indexOf(botScore);
-            this.node.getChildByName("scoreBar").getChildByName(`${index}`).getComponent(cc.Label).string = `BOT${index}: ${this.botScoresArr[index]}`;
+            if(index != -1) {
+                this.node.getChildByName("scoreBar").getChildByName(`${index}`).getComponent(cc.Label).string = `BOT${index}: ${this.botScoresArr[index]}`;
+            }
         }
     }
 
@@ -233,6 +261,8 @@ export default class GamePlay extends cc.Component {
                 let newEgg: cc.Node = cc.instantiate(this.eggPrefab);
                 newEgg.getComponent("Touch").mainChar = this.mainChar;
                 newEgg.getComponent("Touch").id = eggData.id;
+                let rand = Math.round(Math.random() * this.spriteFrameList.length - 1);
+                newEgg.getComponent(cc.Sprite).spriteFrame = this.spriteFrameList[rand];
                 let egg: Egg = {"id": 0, "node": newEgg};
                 egg.id = eggData.id;
                 this.node.addChild(egg.node);
@@ -264,6 +294,7 @@ export default class GamePlay extends cc.Component {
                 this.botServerPos[char.botID] = cc.v2(char.x, char.y);
                 // console.log("[serverAlreadyUpdated] - " + "x =" + this.botServerPos[char.botID].x + ",y = " + this.botServerPos[char.botID].y + ",botID = " + char.botID);
                 this.predictDirectPos[char.botID] = cc.v2(this.botServerPos[char.botID].x + (this.botServerPos[char.botID].x - this.prevBotPos[char.botID].x), this.botServerPos[char.botID].y + (this.botServerPos[char.botID].y - this.prevBotPos[char.botID].y));
+
                 this.botScoresArr[char.botID] = char.score;
                 // this.remoteBot.x = char.x;
                 // this.remoteBot.y = char.y;
@@ -294,6 +325,7 @@ export default class GamePlay extends cc.Component {
                 this.node.addChild(this.remoteBots[char.botID]);
                 this.remoteBots[char.botID].setPosition(cc.v2(char.x,char.y));
                 this.predictDirectPos[char.botID] = cc.v2(char.x,char.y);
+                this.botServerPos[char.botID] = cc.v2(char.x,char.y);
             }
         }
     }
@@ -302,6 +334,8 @@ export default class GamePlay extends cc.Component {
         for(let remoteBot of this.remoteBots) {
             let remoteBotPos: cc.Vec2 = remoteBot.getPosition();
             let directPos: cc.Vec2 = cc.v2();
+            // console.log(`[updateRemoteBot] PredictPos x = ${this.predictDirectPos[this.remoteBots.indexOf(remoteBot)].x}, y = ${this.predictDirectPos[this.remoteBots.indexOf(remoteBot)].y}`);
+            // console.log(`[updateRemoteBot] RemoteBotPos x = ${remoteBotPos.x}, y = ${remoteBotPos.y}`);
             directPos.x = this.predictDirectPos[this.remoteBots.indexOf(remoteBot)].x - remoteBotPos.x >= 0 ? 1 : -1;
             directPos.y = this.predictDirectPos[this.remoteBots.indexOf(remoteBot)].y - remoteBotPos.y >= 0 ? 1 : -1;        
             let speed: number = 100;
@@ -355,9 +389,35 @@ export default class GamePlay extends cc.Component {
 
         //reset score
         this.mcScore = 0;
-        this.botScoresArr = this.botScoresArr.map(score => score * 0);
+        this.botScoresArr = [];
+        this.updateEggs(0);
+        this.node.getChildByName("scoreBar").removeAllChildren();
+
+        this.mainChar.setPosition(cc.v2(0,0));
+        let scoreTxt: cc.Node = cc.instantiate(this.scoreTxt);
+        scoreTxt.name = "mc_score";
+        scoreTxt.getComponent(cc.Label).string = `You: ${this.mcScore}`;
+        this.node.getChildByName("scoreBar").addChild(scoreTxt);
+
+        this.bots.forEach((e) => {
+            e.destroy();
+        });
+        this.bots = [];
+        this.spawnBot();
+        this.remoteBots.forEach((bot) => {
+            bot.destroy();
+        });
+        this.remoteBots = [];
+        this.spawnRemoteBot();
         this.updateScore();
-        // this.mainChar.setPosition(cc.v2(0,0));
+        Game.getInstance().getGamePlay().node.getChildByName("background").removeAllChildren();
         // this.bot.setPosition(cc.v2(0,0));
+    }
+
+    onToggleClick(toggle: cc.Toggle) {
+        let opacity: number = toggle.isChecked ? 100 : 0;
+        for(let bot of this.bots) {
+            bot.opacity = opacity;
+        }
     }
 }

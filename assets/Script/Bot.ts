@@ -34,6 +34,9 @@ export default class Bot extends cc.Component {
     }
 
     update (dt: number) {
+        if(!Game.getInstance().getScreenMgr().isActionPhase()) {
+            return;
+        }
 
         if(!this.chaseEggNode) {
             this.renewChaseEgg();
