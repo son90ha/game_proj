@@ -16,7 +16,8 @@ const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class Game extends cc.Component {
- 
+    
+    botCount: number = 2;
     private gamePlay: GamePlay = null;
     private serverSim: ServerSim = null;
     private timeServerUpdate: number = 0;
@@ -78,12 +79,13 @@ export default class Game extends cc.Component {
         return ServerSim.getInstance().serverData;
     }
 
-    createCharObj(id: string, x: number, y: number, pick: boolean, score:number, eggId?: number): object {
-        return {"id": id, "x": x, "y": y, "pick": pick, "score": score, "eggId": eggId};
+    createCharObj(id: string, x: number, y: number, pick: boolean, score:number, eggId?: number, botID?: number): object {
+        return {"id": id, "x": x, "y": y, "pick": pick, "score": score, "eggId": eggId, "botID": botID};
     }
 
     renewTimeServerUpdate(): void {
         Game.getInstance().timeServerUpdate = Math.random() * 0.4 + 0.1;
+        // Game.getInstance().timeServerUpdate = 0.1;
         Game.getInstance().timeServerElapse = Game.getInstance().timeServerUpdate;
     }
 

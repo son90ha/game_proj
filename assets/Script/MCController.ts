@@ -129,16 +129,16 @@ export default class McController extends cc.Component {
     }
 
     pickEggUp(id: number): void {
-        this.isPickingEgg = true;
-        this.pickEggId = id;
         // console.log("[MCController] - `pickEggUp` " + id);
-        // if(this.canPickEgg) {
-        //     if(this.egg) {
-        //         this.game.playerScoresArr[0]++;
-        //         this.game.updateScore();
-        //         this.egg.node.destroy();
-        //         this.game.spawnNewEgg();
-        //     }
-        // }
+        if(this.canPickEgg) {
+            // if(this.egg) {
+            //     this.game.playerScoresArr[0]++;
+            //     this.game.updateScore();
+            //     this.egg.node.destroy();
+            //     this.game.spawnNewEgg();
+            // }
+            this.isPickingEgg = true;
+            this.pickEggId = id;
+        }
     }
 }

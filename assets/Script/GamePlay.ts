@@ -44,12 +44,17 @@ export default class GamePlay extends cc.Component {
     playerScoresArr: number[] = [];
     mainChar: cc.Node = null;
     bot: cc.Node = null;
+    bots: cc.Node[] = [];
+    remoteBot: cc.Node = null;
     timeToUpdate: number = 0.02;
     timeUpdateElapsed: number = 0.02;
     mcServerPos: cc.Vec2 = cc.v2(0, 0);
+    botServerPos: cc.Vec2 = cc.v2(0, 0);
+    prevBotPos: cc.Vec2 = cc.v2(0, 0)
     ratioDelayServerTime: number = 1;
     distanceCharMove: cc.Vec2 = cc.v2(0, 0);
     eggs: Egg[] = [];
+    predictDirectPos: cc.Vec2 = cc.v2(0, 0);
     // LIFE-CYCLE CALLBACKS:
 
 
@@ -63,7 +68,8 @@ export default class GamePlay extends cc.Component {
         this.updateScore();
         this.spawnMC();
         // this.spawnNewEgg();
-        // this.spawnBot();
+        this.spawnBot();
+        this.spawnRemoteBot();
     }
 
     start () {
@@ -87,9 +93,8 @@ export default class GamePlay extends cc.Component {
 						}
             this.updateTime(this.timeElapsed);
         }
-
+        this.updateRemoteBot(dt);
         if(this.timeUpdateElapsed <= 0) {
-            this.updateMC(this.timeToUpdate);
             this.timeUpdateElapsed = this.timeToUpdate;
         }
         this.timeUpdateElapsed -= dt;
@@ -113,17 +118,32 @@ export default class GamePlay extends cc.Component {
     }
 
     spawnMC(): void {
+        let serverData: string = Game.getInstance().getServerData();
+        let jsonData: any = JSON.parse(serverData);
+        let mcInfo: any = jsonData.charInfo.find((e: { id: string; }) => e.id == "mc");
         this.mainChar = cc.instantiate(this.mcPrefab);
         this.node.addChild(this.mainChar);
-        this.mainChar.setPosition(cc.v2(0,0));
+        this.mainChar.setPosition(cc.v2(mcInfo.x,mcInfo.y));
         this.mainChar.getComponent("MCController").gamePlay = this;
     }
 
     spawnBot(): void {
-        this.bot = cc.instantiate(this.botPrefab);
-        this.node.addChild(this.bot);
-        this.bot.setPosition(cc.v2(0,0));
-        this.bot.getComponent("Bot").game = this;
+        let serverData: string = Game.getInstance().getServerData();
+        let jsonData: any = JSON.parse(serverData);
+        for(let e of jsonData.charInfo) {
+            if(e.id == "bot") {
+                this.bots[e.botID] = cc.instantiate(this.botPrefab);
+                this.node.addChild(this.bots[e.botID]);
+                this.bots[e.botID].setPosition(cc.v2(e.x,e.y));
+                this.bots[e.botID].getComponent("Bot").gamePlay = this;
+                this.bots[e.botID].getComponent("Bot").botID = e.botID;
+            }
+        }
+        // this.bot = cc.instantiate(this.botPrefab);
+        // this.node.addChild(this.bot);
+        // this.bot.setPosition(cc.v2(botInfo.x,botInfo.y));
+        // this.bot.getComponent("Bot").gamePlay = this;
+        // this.bot.opacity = 0;
     }
 
     updateScore(): void {
@@ -202,9 +222,23 @@ export default class GamePlay extends cc.Component {
         this.eggs = this.eggs.filter((e) => e.node != null);
     }
 
-    serverAlreadyUpdated() {
+    serverAlreadyUpdated(): void {
+        let jsonServerData: any = JSON.parse(Game.getInstance().getServerSim().serverData);
+        for(let char of jsonServerData.charInfo) {
+            if(char.id == "mc") {
+                // console.log(char.score);
+                this.playerScoresArr[0] = char.score;
+            } else if (char.id == "bot") {
+                this.playerScoresArr[1] = char.score;
+                this.prevBotPos = this.botServerPos;
+                this.botServerPos = cc.v2(char.x, char.y);
+                this.predictDirectPos = cc.v2(this.botServerPos.x + (this.botServerPos.x - this.prevBotPos.x), this.botServerPos.y + (this.botServerPos.y - this.prevBotPos.y));
+                // this.remoteBot.x = char.x;
+                // this.remoteBot.y = char.y;
+            }
+        }
         this.updateEggs(0);
-        // let jsonServerData: any = JSON.parse(Game.getInstance().getServerSim().serverData);
+        this.updateScore();
         // let mcData = jsonServerData.charInfo[0];
         // this.mainChar.x = this.mcServerPos.x;
         // this.mainChar.y = this.mcServerPos.y;
@@ -217,6 +251,52 @@ export default class GamePlay extends cc.Component {
         // this.distanceCharMove.y = (this.mcServerPos.y - this.mainChar.y) / this.ratioDelayServerTime;
     }
 
+    spawnRemoteBot(): void {
+        let jsonServerData: any = JSON.parse(Game.getInstance().getServerSim().serverData);
+        for(let char of jsonServerData.charInfo) {
+            if (char.id == "bot") {
+                console.log("spawnRemoteBot - " + char.x + ":" + char.y);
+                this.remoteBot = cc.instantiate(this.botPrefab);
+                this.remoteBot.opacity = 100;
+                this.remoteBot.group = "default";
+                this.remoteBot.removeComponent("Bot");
+                this.node.addChild(this.remoteBot);
+                this.remoteBot.setPosition(cc.v2(char.x,char.y));
+            }
+        }
+    }
+
+    updateRemoteBot(dt: number): void {
+        let remoteBotPos: cc.Vec2 = this.remoteBot.getPosition();
+        // let predictDirectPos: cc.Vec2 = cc.v2(this.botServerPos.x + (this.botServerPos.x - this.prevBotPos.x), this.botServerPos.y + (this.botServerPos.y - this.prevBotPos.y));
+        // predictDirectPos.mulSelf(0.5);
+        let directPos: cc.Vec2 = cc.v2();
+        directPos.x = this.predictDirectPos.x - remoteBotPos.x >= 0 ? 1 : -1;
+        directPos.y = this.predictDirectPos.y - remoteBotPos.y >= 0 ? 1 : -1;        
+        // directPos.x = this.botServerPos.x - remoteBotPos.x >= 0 ? 1 : -1;
+        // directPos.y = this.botServerPos.y - remoteBotPos.y >= 0 ? 1 : -1;
+        let speed: number = 100;
+        if(this.predictDirectPos.sub(remoteBotPos).mag() > 100) {
+            // this.remoteBot.x = this.botServerPos.x;g
+            // this.remoteBot.y = this.botServerPos.y;
+            speed = 200;
+        } else if (this.predictDirectPos.sub(remoteBotPos).mag() > 50) {
+            speed = 150;
+        } else if (this.predictDirectPos.sub(remoteBotPos).mag() > 20) {
+            speed = 120;
+        } else {
+            speed = 100;
+            // this.remoteBot.x = this.remoteBot.x + directPos.x * speed * dt;
+            // this.remoteBot.y = this.remoteBot.y + directPos.y * speed * dt;
+        }
+        this.remoteBot.x = this.remoteBot.x + directPos.x * speed * dt;
+        this.remoteBot.y = this.remoteBot.y + directPos.y * speed * dt;
+        // this.remoteBot.x = this.botServerPos.x;
+        // this.remoteBot.y = this.botServerPos.y;
+        // this.remoteBot.x = predictDirectPos.x;
+        // this.remoteBot.y = predictDirectPos.y;
+    }
+    
     reset(): void {
         this.playerScoresArr[0] = 0;
         this.playerScoresArr[1] = 0;

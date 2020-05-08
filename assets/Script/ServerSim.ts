@@ -47,8 +47,14 @@ export default class ServerSim extends cc.Component {
     initData() {
         let jsonData = JSON.parse(ServerSim.getInstance().serverData);
         jsonData["charInfo"] = [
-            {"id": "mc", "x": 0, "y": 0, "pick": false, "score": 0, "eggId": undefined}
+            {"id": "mc", "x": 0, "y": 0, "pick": false, "score": 0, "eggId": undefined},
+            // {"id": "bot", "x": 0, "y": 0, "pick": false, "score": 0, "eggId": undefined}
         ];
+        for(let i: number = 0; i < Game.getInstance().botCount; i++) {
+            let randomPos = Game.getInstance().getGamePlay().createNewEggPos();
+            let botObj: object = Game.getInstance().createCharObj("bot", randomPos.x, randomPos.y, false, 0, undefined, i);
+            jsonData["charInfo"].push(botObj);
+        }
         let randomeEggPos = Game.getInstance().getGamePlay().createNewEggPos()
         // console.log("randomeEggPos:" + randomeEggPos);
         jsonData["eggs"] = [{"id": ServerSim.getInstance().eggIndex,"x": randomeEggPos.x, "y": randomeEggPos.y}];
@@ -61,27 +67,34 @@ export default class ServerSim extends cc.Component {
         let charInfo: any = jsonServerData["charInfo"];
         let eggsInfo: any = jsonServerData["eggs"];
         for(let char of charInfo) {
-            if(char.id == "mc") {
+            if(char.id == jsonData.id) {
                 char.x = Math.round(jsonData.x);
                 char.y = Math.round(jsonData.y);
                 char.pick = jsonData.pick;
                 char.eggId = jsonData.eggId;
-                if(char.pick == true) {
+                if(char.pick == true) { 
+                    // console.log("pick");
+                    if(eggsInfo.some((egg: any) => {
+                        return egg.id == char.eggId;
+                    })) {
+                        char.score = char.score + 1;
+                        ServerSim.getInstance().spawnNewEgg(eggsInfo);
+                    }
                     eggsInfo = eggsInfo.filter((egg: any) => {
                         return egg.id != char.eggId;
                     });
-                    ServerSim.getInstance().spawnNewEgg(eggsInfo);
                     char.pick = false;
                 }
             }
         }
         jsonServerData["eggs"] = eggsInfo;
+        jsonServerData["charInfo"] = charInfo;
         // console.log("`updateServerData` - " + JSON.stringify(jsonServerData));
         ServerSim.getInstance().serverData = JSON.stringify(jsonServerData);
     }
 
     spawnNewEgg(eggsInfo: any): void {
-        console.log("[ServerSim] `spawnNewEgg`");
+        // console.log("[ServerSim] `spawnNewEgg`");
         let randomeEggPos = Game.getInstance().getGamePlay().createNewEggPos()
         // let jsonData = JSON.parse(ServerSim.getInstance().serverData);
         ServerSim.getInstance().eggIndex = ServerSim.getInstance().eggIndex + 1;
