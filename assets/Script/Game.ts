@@ -17,7 +17,7 @@ const {ccclass, property} = cc._decorator;
 @ccclass
 export default class Game extends cc.Component {
     
-    botCount: number = 2;
+    botCount: number = 3;
     private gamePlay: GamePlay = null;
     private serverSim: ServerSim = null;
     private timeServerUpdate: number = 0;
@@ -85,7 +85,7 @@ export default class Game extends cc.Component {
 
     renewTimeServerUpdate(): void {
         Game.getInstance().timeServerUpdate = Math.random() * 0.4 + 0.1;
-        // Game.getInstance().timeServerUpdate = 0.1;
+        // Game.getInstance().timeServerUpdate = 0.05;
         Game.getInstance().timeServerElapse = Game.getInstance().timeServerUpdate;
     }
 

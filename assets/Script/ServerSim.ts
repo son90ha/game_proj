@@ -68,22 +68,24 @@ export default class ServerSim extends cc.Component {
         let eggsInfo: any = jsonServerData["eggs"];
         for(let char of charInfo) {
             if(char.id == jsonData.id) {
-                char.x = Math.round(jsonData.x);
-                char.y = Math.round(jsonData.y);
-                char.pick = jsonData.pick;
-                char.eggId = jsonData.eggId;
-                if(char.pick == true) { 
-                    // console.log("pick");
-                    if(eggsInfo.some((egg: any) => {
-                        return egg.id == char.eggId;
-                    })) {
-                        char.score = char.score + 1;
-                        ServerSim.getInstance().spawnNewEgg(eggsInfo);
+                if(char.id == "mc" || char.botID == jsonData.botID) {
+                    char.x = Math.round(jsonData.x);
+                    char.y = Math.round(jsonData.y);
+                    char.pick = jsonData.pick;
+                    char.eggId = jsonData.eggId;
+                    if(char.pick == true) { 
+                        // console.log("pick");
+                        if(eggsInfo.some((egg: any) => {
+                            return egg.id == char.eggId;
+                        })) {
+                            char.score = char.score + 1;
+                            ServerSim.getInstance().spawnNewEgg(eggsInfo);
+                        }
+                        eggsInfo = eggsInfo.filter((egg: any) => {
+                            return egg.id != char.eggId;
+                        });
+                        char.pick = false;
                     }
-                    eggsInfo = eggsInfo.filter((egg: any) => {
-                        return egg.id != char.eggId;
-                    });
-                    char.pick = false;
                 }
             }
         }

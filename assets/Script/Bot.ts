@@ -42,7 +42,7 @@ export default class Bot extends cc.Component {
             this.node.y = this.node.y + directPos.y * this.speed * dt;
         }
         let botObj = Game.getInstance().createCharObj("bot", this.node.x, this.node.y, this.isPickingEgg, this.gamePlay.playerScoresArr[1], this.pickEggId, this.botID);
-        console.log("[Bot Update] - " + JSON.stringify(botObj));
+        // console.log("[Bot Update] - " + JSON.stringify(botObj));
         Game.getInstance().postToServer(JSON.stringify(botObj));
     }
 
