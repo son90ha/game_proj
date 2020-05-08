@@ -17,8 +17,9 @@ export default class CollsionMgr extends cc.Component {
     onCollisionEnter(other: any, self: any) {
         if(other.node.group == "egg" && self.node.group == "char") {
             let mc = self.node.getComponent("MCController");
-            mc.canPickEgg = true;
-            mc.egg = other;
+            // mc.canPickEgg = true;
+            // mc.egg = other;
+            mc.addEggsCanPick(other, self);
         }
 
         if(other.node.group == "egg" && self.node.group == "bot") {
@@ -29,8 +30,7 @@ export default class CollsionMgr extends cc.Component {
     onCollisionExit(other: any, self: any) {
         if(other.node.group == "egg" && self.node.group == "char") {
             let mc = self.node.getComponent("MCController");
-            mc.canPickEgg = false;
-            mc.egg = null;
+            mc.removeEggsCanPick(other, self);
         }
     }
 

@@ -37,11 +37,17 @@ export default class GamePlay extends cc.Component {
     })
     botPrefab: cc.Prefab = null;
 
+    @property({
+        type: cc.Prefab
+    })
+    scoreTxt: cc.Prefab = null;
+
     @property
     timeLimit: number = 0;
     boxEdgeSize: cc.Vec2 = cc.v2();
     timeElapsed: number = 0;
-    playerScoresArr: number[] = [];
+    mcScore: number = 0;
+    botScoresArr: number[] = [];
     mainChar: cc.Node = null;
     bot: cc.Node = null;
     bots: cc.Node[] = [];
@@ -63,17 +69,15 @@ export default class GamePlay extends cc.Component {
 
 
     onLoad () {
-        this.playerScoresArr[0] = 0;
-        this.playerScoresArr[1] = 0;
         this.timeElapsed = this.timeLimit;
         this.boxEdgeSize = cc.v2(this.node.getChildByName("boxEdge").width, this.node.getChildByName("boxEdge").height);
         Game.getInstance().getServerSim().initData();
         this.updateTime(this.timeLimit);
-        this.updateScore();
         this.spawnMC();
         // this.spawnNewEgg();
         this.spawnBot();
         this.spawnRemoteBot();
+        this.updateScore();
     }
 
     start () {
@@ -87,13 +91,21 @@ export default class GamePlay extends cc.Component {
 							this.timeElapsed = 0;
                             ScreenMgr.getInstance().changeScreen(ScreenStatus.result_screen);
                             let resultScreen = ScreenMgr.getInstance().resultScreen.getComponent("ResultScreen");
-							if (this.playerScoresArr[0] > this.playerScoresArr[1]) {
-								resultScreen.label.string = "WIN";
-							} else if (this.playerScoresArr[0] < this.playerScoresArr[1]) {
-								resultScreen.label.string = "LOSS";
-							} else if (this.playerScoresArr[0] === this.playerScoresArr[1]) {
-								resultScreen.label.string = "DRAW";
-							}
+                            let botMaxScore: number = Math.max(...this.botScoresArr);
+                            let isYouWin: boolean = this.mcScore >= botMaxScore;
+                            if(isYouWin) {
+                                resultScreen.label.string = "YOU WIN - Score = " + this.mcScore;
+                            } else {
+                                resultScreen.label.string = `BOT${this.botScoresArr.indexOf(botMaxScore)} WIN - Score = ${botMaxScore}`;
+                            }
+
+							// if (this.playerScoresArr[0] > this.playerScoresArr[1]) {
+							// 	resultScreen.label.string = "WIN";
+							// } else if (this.playerScoresArr[0] < this.playerScoresArr[1]) {
+							// 	resultScreen.label.string = "LOSS";
+							// } else if (this.playerScoresArr[0] === this.playerScoresArr[1]) {
+							// 	resultScreen.label.string = "DRAW";
+							// }
 						}
             this.updateTime(this.timeElapsed);
         }
@@ -129,6 +141,11 @@ export default class GamePlay extends cc.Component {
         this.node.addChild(this.mainChar);
         this.mainChar.setPosition(cc.v2(mcInfo.x,mcInfo.y));
         this.mainChar.getComponent("MCController").gamePlay = this;
+
+        let scoreTxt: cc.Node = cc.instantiate(this.scoreTxt);
+        scoreTxt.name = "mc_score";
+        scoreTxt.getComponent(cc.Label).string = `You: ${this.mcScore}`;
+        this.node.getChildByName("scoreBar").addChild(scoreTxt);
     }
 
     spawnBot(): void {
@@ -142,6 +159,12 @@ export default class GamePlay extends cc.Component {
                 this.bots[e.botID].getComponent("Bot").gamePlay = this;
                 this.bots[e.botID].getComponent("Bot").botID = e.botID;
                 this.bots[e.botID].opacity = 100;
+                this.botScoresArr[e.botID] = e.score;
+
+                let scoreTxt: cc.Node = cc.instantiate(this.scoreTxt);
+                scoreTxt.name = `${e.botID}`;
+                scoreTxt.getComponent(cc.Label).string = `BOT${e.botID}: ${this.botScoresArr[e.botID]}`;
+                this.node.getChildByName("scoreBar").addChild(scoreTxt);
             }
         }
         // this.bot = cc.instantiate(this.botPrefab);
@@ -152,10 +175,12 @@ export default class GamePlay extends cc.Component {
     }
 
     updateScore(): void {
-        let scoreTxt1: cc.Label = this.node.getChildByName("scoreBar").getChildByName("score_txt_1").getComponent(cc.Label);
-        scoreTxt1.string = `You: ${this.playerScoresArr[0]}`;
-        let scoreTxt2: cc.Label = this.node.getChildByName("scoreBar").getChildByName("score_txt_2").getComponent(cc.Label);
-        scoreTxt2.string = `Bot: ${this.playerScoresArr[1]}`;
+        //let scoreTxt1: cc.Label = this.node.getChildByName("scoreBar").getChildByName("score_txt_1").getComponent(cc.Label);
+        this.node.getChildByName("scoreBar").getChildByName("mc_score").getComponent(cc.Label).string = `You: ${this.mcScore}`;
+        for(let botScore of this.botScoresArr) {
+            let index = this.botScoresArr.indexOf(botScore);
+            this.node.getChildByName("scoreBar").getChildByName(`${index}`).getComponent(cc.Label).string = `BOT${index}: ${this.botScoresArr[index]}`;
+        }
     }
 
     updateTime(time: number): void {
@@ -232,13 +257,14 @@ export default class GamePlay extends cc.Component {
         for(let char of jsonServerData.charInfo) {
             if(char.id == "mc") {
                 // console.log(char.score);
-                this.playerScoresArr[0] = char.score;
+                this.mcScore = char.score;
             } else if (char.id == "bot") {
                 // this.playerScoresArr[1] = char.score;
                 this.prevBotPos[char.botID] = cc.v2(this.botServerPos[char.botID]);
                 this.botServerPos[char.botID] = cc.v2(char.x, char.y);
-                console.log("[serverAlreadyUpdated] - " + "x =" + this.botServerPos[char.botID].x + ",y = " + this.botServerPos[char.botID].y + ",botID = " + char.botID);
+                // console.log("[serverAlreadyUpdated] - " + "x =" + this.botServerPos[char.botID].x + ",y = " + this.botServerPos[char.botID].y + ",botID = " + char.botID);
                 this.predictDirectPos[char.botID] = cc.v2(this.botServerPos[char.botID].x + (this.botServerPos[char.botID].x - this.prevBotPos[char.botID].x), this.botServerPos[char.botID].y + (this.botServerPos[char.botID].y - this.prevBotPos[char.botID].y));
+                this.botScoresArr[char.botID] = char.score;
                 // this.remoteBot.x = char.x;
                 // this.remoteBot.y = char.y;
             }
@@ -323,12 +349,15 @@ export default class GamePlay extends cc.Component {
     }
     
     reset(): void {
-        this.playerScoresArr[0] = 0;
-        this.playerScoresArr[1] = 0;
         this.timeElapsed = this.timeLimit;
         this.updateTime(this.timeLimit);
+        Game.getInstance().getServerSim().initData();
+
+        //reset score
+        this.mcScore = 0;
+        this.botScoresArr = this.botScoresArr.map(score => score * 0);
         this.updateScore();
-        this.mainChar.setPosition(cc.v2(0,0));
-        this.bot.setPosition(cc.v2(0,0));
+        // this.mainChar.setPosition(cc.v2(0,0));
+        // this.bot.setPosition(cc.v2(0,0));
     }
 }

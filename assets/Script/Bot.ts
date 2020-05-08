@@ -20,6 +20,8 @@ export default class Bot extends cc.Component {
     speed: number = 0;
     gamePlay: GamePlay = null;
     isChaseEgg: boolean = false;
+    chaseEggNode: cc.Node = null;
+    chaseEggPos: cc.Vec2 = cc.v2(0,0);
     isPickingEgg: boolean = false;
     pickEggId: number = undefined;
     botID: number = undefined;
@@ -32,16 +34,35 @@ export default class Bot extends cc.Component {
     }
 
     update (dt: number) {
-        if(this.gamePlay.node.getChildByName("egg")) {
-            let eggPos: cc.Vec2 = this.gamePlay.node.getChildByName("egg").getPosition();
-            let botPos: cc.Vec2 = this.node.getPosition();
-            let directPos: cc.Vec2 = cc.v2();
-            directPos.x = eggPos.x - botPos.x >= 0 ? 1 : -1;
-            directPos.y = eggPos.y - botPos.y >= 0 ? 1 : -1;
-            this.node.x = this.node.x + directPos.x * this.speed * dt;
-            this.node.y = this.node.y + directPos.y * this.speed * dt;
+
+        if(!this.chaseEggNode) {
+            this.renewChaseEgg();
         }
-        let botObj = Game.getInstance().createCharObj("bot", this.node.x, this.node.y, this.isPickingEgg, this.gamePlay.playerScoresArr[1], this.pickEggId, this.botID);
+
+        if(this.chaseEggNode != null && this.chaseEggNode != undefined)  {
+            if(this.chaseEggNode.isValid) {
+                let eggPos: cc.Vec2 = this.chaseEggPos;
+                let botPos: cc.Vec2 = this.node.getPosition();
+                let directPos: cc.Vec2 = cc.v2();
+                directPos.x = eggPos.x - botPos.x >= 0 ? 1 : -1;
+                directPos.y = eggPos.y - botPos.y >= 0 ? 1 : -1;
+                this.node.x = this.node.x + directPos.x * this.speed * dt;
+                this.node.y = this.node.y + directPos.y * this.speed * dt;
+            } else {
+                this.renewChaseEgg();
+            }
+        }
+
+        // if(this.gamePlay.node.getChildByName("egg")) {
+        //     let eggPos: cc.Vec2 = this.gamePlay.node.getChildByName("egg").getPosition();
+        //     let botPos: cc.Vec2 = this.node.getPosition();
+        //     let directPos: cc.Vec2 = cc.v2();
+        //     directPos.x = eggPos.x - botPos.x >= 0 ? 1 : -1;
+        //     directPos.y = eggPos.y - botPos.y >= 0 ? 1 : -1;
+        //     this.node.x = this.node.x + directPos.x * this.speed * dt;
+        //     this.node.y = this.node.y + directPos.y * this.speed * dt;
+        // }
+        let botObj = Game.getInstance().createCharObj("bot", this.node.x, this.node.y, this.isPickingEgg, 0, this.pickEggId, this.botID);
         // console.log("[Bot Update] - " + JSON.stringify(botObj));
         Game.getInstance().postToServer(JSON.stringify(botObj));
     }
@@ -57,4 +78,13 @@ export default class Bot extends cc.Component {
         }
     }
 
+    renewChaseEgg(): void {
+            if(this.gamePlay.eggs.length > 0) {
+                let randomIndex = Math.round((Math.random() * this.gamePlay.eggs.length) - 1);
+                if(this.gamePlay.eggs[randomIndex]) {
+                    this.chaseEggNode = this.gamePlay.eggs[randomIndex].node;
+                    this.chaseEggPos = this.chaseEggNode.getPosition();
+                }
+            }
+        }
 }

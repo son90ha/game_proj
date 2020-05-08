@@ -55,10 +55,13 @@ export default class ServerSim extends cc.Component {
             let botObj: object = Game.getInstance().createCharObj("bot", randomPos.x, randomPos.y, false, 0, undefined, i);
             jsonData["charInfo"].push(botObj);
         }
-        let randomeEggPos = Game.getInstance().getGamePlay().createNewEggPos()
-        // console.log("randomeEggPos:" + randomeEggPos);
-        jsonData["eggs"] = [{"id": ServerSim.getInstance().eggIndex,"x": randomeEggPos.x, "y": randomeEggPos.y}];
-        // console.log(JSON.stringify(jsonData));
+        jsonData["eggs"] = [];
+        for(let i: number = 0; i < Game.getInstance().eggCount; i++) {
+            let randomeEggPos = Game.getInstance().getGamePlay().createNewEggPos()
+            ServerSim.getInstance().eggIndex = i;
+            let eggObj = {"id": ServerSim.getInstance().eggIndex,"x": randomeEggPos.x, "y": randomeEggPos.y};
+            jsonData["eggs"].push(eggObj);
+        }
         ServerSim.getInstance().serverData = JSON.stringify(jsonData);
     }
 
@@ -74,7 +77,7 @@ export default class ServerSim extends cc.Component {
                     char.pick = jsonData.pick;
                     char.eggId = jsonData.eggId;
                     if(char.pick == true) { 
-                        // console.log("pick");
+                        console.log("pick");
                         if(eggsInfo.some((egg: any) => {
                             return egg.id == char.eggId;
                         })) {

@@ -17,7 +17,8 @@ const {ccclass, property} = cc._decorator;
 @ccclass
 export default class Game extends cc.Component {
     
-    botCount: number = 3;
+    botCount: number = 5;
+    eggCount: number = 10;
     private gamePlay: GamePlay = null;
     private serverSim: ServerSim = null;
     private timeServerUpdate: number = 0;

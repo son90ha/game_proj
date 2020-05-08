@@ -19,7 +19,7 @@ export default class McController extends cc.Component {
     @property
     speed: number = 1;
     gamePlay: GamePlay = null;
-    canPickEgg: boolean = false;
+    eggsCanPick: number[] = [];
     egg: cc.Component = null;
 
 
@@ -28,7 +28,7 @@ export default class McController extends cc.Component {
     moveUp: boolean = false;
     moveDown: boolean = false;
     isPickingEgg: boolean = false;
-    pickEggId = undefined;;
+    pickEggId = undefined;
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
@@ -58,6 +58,7 @@ export default class McController extends cc.Component {
         // } else if(this.moveRight) {
         //     x = 1;
         // }
+        // console.log("[MCController] - update - canPickEgg = " + this.eggsCanPick);
         if(this.moveUp) {
             if(this.node.y <= this.gamePlay.boxEdgeSize.y / 2) {
                 this.node.y += this.speed * dt;
@@ -78,7 +79,7 @@ export default class McController extends cc.Component {
             }
         }
         // console.log(`[MCController] - update - this.isPickingEgg = ${this.isPickingEgg}`);
-        let mcObj = Game.getInstance().createCharObj("mc", this.node.x, this.node.y, this.isPickingEgg, this.gamePlay.playerScoresArr[0], this.pickEggId);
+        let mcObj = Game.getInstance().createCharObj("mc", this.node.x, this.node.y, this.isPickingEgg, this.gamePlay.mcScore, this.pickEggId);
         Game.getInstance().postToServer(JSON.stringify(mcObj));
     }
 
@@ -130,7 +131,7 @@ export default class McController extends cc.Component {
 
     pickEggUp(id: number): void {
         // console.log("[MCController] - `pickEggUp` " + id);
-        if(this.canPickEgg) {
+        if(this.eggsCanPick.indexOf(id) != -1) {
             // if(this.egg) {
             //     this.game.playerScoresArr[0]++;
             //     this.game.updateScore();
@@ -139,6 +140,35 @@ export default class McController extends cc.Component {
             // }
             this.isPickingEgg = true;
             this.pickEggId = id;
+            this.eggsCanPick.splice(this.eggsCanPick.indexOf(id), 1);
+        }
+    }
+
+    addEggsCanPick(other: any, self: any) {
+        // console.log("[MCController] - addEggsCanPick");
+        for(let e of this.gamePlay.eggs) {
+            if(e.node == other.node) {
+                // console.log("[MCController] - for loop");
+                if(!this.eggsCanPick.some((egg) => {
+                    return egg == e.id;
+                })) {
+                    this.eggsCanPick.push(e.id);
+                    break;
+                }
+            }
+        }
+    }
+
+    removeEggsCanPick(other: any, self: any) {
+        for(let e of this.gamePlay.eggs) {
+            if(e.node === other.node) {
+                if(this.eggsCanPick.some((egg) => {
+                    return egg == e.id;
+                })) {
+                    this.eggsCanPick.splice(this.eggsCanPick.indexOf(e.id), 1);
+                    break;
+                }
+            }
         }
     }
 }
