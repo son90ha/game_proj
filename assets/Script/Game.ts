@@ -18,6 +18,7 @@ const {ccclass, property} = cc._decorator;
 export default class Game extends cc.Component {
  
     private gamePlay: GamePlay = null;
+    
     private serverSim: ServerSim = null;
     private timeServerUpdate: number = 0;
     private timeServerElapse: number = 0;
